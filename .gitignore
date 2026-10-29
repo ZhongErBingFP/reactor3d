@@ -1,0 +1,16 @@
+# Generated web bundles
+reactor3d/index.html
+reactor3d/控制棒矩阵.html
+desktop/app/index.html
+
+# Dependencies and build products
+**/node_modules/
+desktop/dist/
+desktop/release/
+
+# Local captures and development artifacts
+**/shots/
+**/core07test/
+**/*.log
+**/*.wav
+**/*.lnk
