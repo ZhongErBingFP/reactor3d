@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#060807">
+<meta name="description" content="控制棒矩阵：3D 核反应堆控制棒阵列直接随音乐频谱升降，从低频到高频形成动态棒列。">
+<title>控制棒矩阵 · AUDIO REACTIVE CORE</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23080b09'/%3E%3Ccircle cx='32' cy='32' r='22' fill='none' stroke='%23c9bd91' stroke-width='2'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%23d9d3b7'/%3E%3Cpath d='M32 6v9M32 49v9M6 32h9M49 32h9' stroke='%23c9bd91' stroke-width='2'/%3E%3C/svg%3E">
+<style>
+/*__STYLE__*/
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="scene" aria-label="3D 核反应堆控制棒阵列，会随音乐跳动"></canvas>
+  <div class="screen-fx" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <div class="ui" id="ui">
+    <header class="topbar">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 44 44" aria-hidden="true">
+          <circle cx="22" cy="22" r="19" fill="none" stroke="currentColor" stroke-opacity=".32"/>
+          <circle cx="22" cy="22" r="13" fill="none" stroke="currentColor" stroke-opacity=".55" stroke-dasharray="2 4"/>
+          <circle cx="22" cy="22" r="3.2" fill="currentColor"/>
+          <path d="M22 1v7M22 36v7M1 22h7M36 22h7" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M10 10l4.5 4.5M29.5 29.5L34 34M34 10l-4.5 4.5M14.5 29.5L10 34" stroke="currentColor" stroke-opacity=".65"/>
+        </svg>
+        <div class="brand-copy">
+          <strong>CORE<span>//</span>07</strong>
+          <small data-i18n="brandTag">核反应堆 · 控制棒阵列</small>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="system-status" id="systemStatus" data-state="idle">
+          <span class="status-light"></span>
+          <span id="statusText">SYSTEM ONLINE</span>
+          <i></i>
+          <span class="status-sub" id="statusSub">STANDBY</span>
+        </div>
+        <button class="lang-btn" id="langBtn" type="button" title="Switch to English" aria-label="Switch to English"><span id="langBtnText">EN</span></button>
+        <button class="icon-btn" id="helpBtn" type="button" title="操作说明" aria-label="打开操作说明">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.2" fill="none" stroke="currentColor"/><path d="M8.1 7.6c.2-1.2 1-1.9 2.1-1.9 1.2 0 2 .8 2 1.9 0 1.6-2.1 1.7-2.1 3.4" fill="none" stroke="currentColor" stroke-linecap="round"/><circle cx="10.1" cy="13.8" r=".75" fill="currentColor"/></svg>
+        </button>
+        <button class="icon-btn" id="fullBtn" type="button" title="全屏（F11 亦可）" aria-label="全屏">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.2 3.5H3.5v3.7M12.8 3.5h3.7v3.7M16.5 12.8v3.7h-3.7M7.2 16.5H3.5v-3.7" fill="none" stroke="currentColor" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <section class="hero" aria-label="项目介绍">
+      <div class="eyebrow"><span class="eyebrow-line"></span><span data-i18n="heroKicker">CONTROL ROD MATRIX / UNIT 07</span></div>
+      <h1><span data-i18n="title1">控制棒</span><em data-i18n="title2">矩阵</em></h1>
+      <p class="hero-lede" data-i18n-html="heroLede">当音乐进入堆芯，<br>每一根控制棒都有自己的呼吸。</p>
+      <div class="hero-specs">
+        <div><b id="rodCount">—</b><span data-i18n="specRods">控制棒 / RODS</span></div>
+        <div><b>04</b><span data-i18n="specBands">频段响应 / BANDS</span></div>
+        <div><b>3D</b><span data-i18n="specLive">实时渲染 / LIVE</span></div>
+      </div>
+      <div class="hero-legend" aria-label="控制棒材质图例">
+        <span><i class="swatch swatch-cream"></i><span data-i18n="legendCeramic">陶瓷 / 反射层</span></span>
+        <span><i class="swatch swatch-red"></i><span data-i18n="legendAbsorber">吸收体</span></span>
+        <span><i class="swatch swatch-green"></i><span data-i18n="legendModerator">慢化体</span></span>
+      </div>
+      <div class="disclaimer" data-i18n="disclaimer">艺术可视化 · 非工程仿真</div>
+    </section>
+
+    <aside class="telemetry" aria-label="堆芯实时遥测">
+      <div class="panel-head">
+        <span><span data-i18n="telemetryTitle">堆芯遥测</span> <em>CORE TELEMETRY</em></span>
+        <span class="live-tag"><i></i>LIVE</span>
+      </div>
+      <div class="readout-row">
+        <div class="readout">
+          <span id="exciteValue">00</span><sup>%</sup>
+          <small data-i18n="excitationLabel">声能激励 / EXCITATION</small>
+        </div>
+        <div class="core-gauge" id="coreGauge" aria-hidden="true">
+          <svg viewBox="0 0 74 74"><circle class="gauge-track" cx="37" cy="37" r="31"/><circle class="gauge-fill" id="gaugeFill" cx="37" cy="37" r="31"/></svg>
+          <b id="gaugeText">00</b>
+          <span>LOAD</span>
+        </div>
+      </div>
+      <canvas id="scope" width="460" height="116" aria-hidden="true"></canvas>
+      <div class="band-list">
+        <div class="band" data-band="bass"><span>BASS</span><div class="bar"><i></i></div><b>00</b></div>
+        <div class="band" data-band="low"><span>LOW</span><div class="bar"><i></i></div><b>00</b></div>
+        <div class="band" data-band="mid"><span>MID</span><div class="bar"><i></i></div><b>00</b></div>
+        <div class="band" data-band="high"><span>HIGH</span><div class="bar"><i></i></div><b>00</b></div>
+      </div>
+      <div class="sens-panel">
+        <div class="sens-head">
+          <span><span data-i18n="sensitivity">灵敏度</span> <em>ROD AMPLITUDE</em></span>
+          <b class="sens-readout" data-sens-readout>1.00×</b>
+        </div>
+        <input class="sens-slider" type="range" min="0.3" max="2.5" step="0.05" value="1" aria-label="控制棒振幅灵敏度">
+      </div>
+      <div class="volume-panel">
+        <div class="sens-head">
+          <span><span data-i18n="playbackVolume">播放音量</span> <em>PLAYBACK</em></span>
+          <b class="volume-readout" data-vol-readout>65</b>
+        </div>
+        <input class="volume-range" type="range" min="0" max="1" step="0.01" value="0.65" aria-label="播放音量">
+        <div class="volume-note" data-i18n="volumeNote">控制内置 / 本地音乐与演示音量；系统声音请在原播放器中调节</div>
+      </div>
+      <div class="panel-foot">
+        <span><span data-i18n="avgLift">平均棒位</span> <em>ROD LIFT</em></span>
+        <b><span id="liftValue">0.00</span> m</b>
+      </div>
+      <div class="source-state" id="sourceState">等待音源接入 / STANDBY</div>
+    </aside>
+
+    <div class="ignite-hint" id="igniteHint">
+      <button type="button" id="igniteBtn" aria-label="选择音乐文件">
+        <span class="ignite-pulse"></span>
+        <span class="ignite-copy"><b data-i18n="igniteTitle">选择音频</b><small data-i18n="igniteSub">系统声音 / 程序声音 / 本地文件</small></span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.2L12 5.5v13L7.2 14.5H4z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M15.5 8.5a5 5 0 010 7M18 6a8.4 8.4 0 010 12" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+
+    <div class="shortcuts" aria-hidden="true">
+      <span data-i18n-html="shortcutPlay"><kbd>SPACE</kbd> 播放 / 暂停</span>
+      <span data-i18n-html="shortcutSystem"><kbd>S</kbd> 电脑声音</span>
+      <span data-i18n-html="shortcutHide"><kbd>H</kbd> 隐藏界面</span>
+      <span data-i18n-html="shortcutReset"><kbd>R</kbd> 重置视角</span>
+      <span class="drag-tip" data-i18n="shortcutOrbit">拖拽旋转 · 滚轮缩放</span>
+    </div>
+
+    <section class="dock" id="dock" aria-label="音乐播放器">
+      <div class="dock-edge" aria-hidden="true"></div>
+      <div class="track-art" id="trackArt" aria-hidden="true">
+        <div class="art-grid" id="artGrid"></div>
+        <div class="art-scan"></div>
+      </div>
+      <div class="track-info">
+        <div class="track-meta">
+          <span id="sourceLabel">NO SIGNAL</span>
+          <span class="meta-sep"></span>
+          <span id="trackSpec" data-i18n="defaultSpec">音频驱动 / AUDIO REACTIVE</span>
+        </div>
+        <div class="track-title" id="trackTitle">等待音轨接入</div>
+      </div>
+      <div class="play-cluster">
+        <button class="play-btn" id="playBtn" type="button" aria-label="播放">
+          <svg class="icon-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6.5l9 5.5-9 5.5z" fill="currentColor"/></svg>
+          <svg class="icon-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 6.5h2.7v11H8.5zM12.8 6.5h2.7v11h-2.7z" fill="currentColor"/></svg>
+          <span class="btn-ring"></span>
+        </button>
+        <div class="timecode"><span id="timeLabel">00:00</span><i>/</i><span id="durationLabel">--:--</span></div>
+      </div>
+      <div class="seek-col">
+        <div class="seek" id="seek" role="slider" tabindex="0" aria-label="播放进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="seek-bg"></div>
+          <div class="seek-buffer" id="seekBuffer"></div>
+          <div class="seek-fill" id="seekFill"></div>
+          <div class="seek-head" id="seekHead"></div>
+        </div>
+        <div class="seek-meta">
+          <span id="playState">已暂停 / STANDBY</span>
+          <span class="seek-tip" id="seekTip">拖入音乐，或点击「电脑声音」捕获电脑播放的音频</span>
+          <label class="sens-inline" title="调整控制棒振幅 / Rod amplitude">
+            <span data-i18n="sensitivityShort">灵敏度</span>
+            <input class="sens-slider" type="range" min="0.3" max="2.5" step="0.05" value="1" aria-label="控制棒振幅灵敏度">
+            <b data-sens-readout>1.0×</b>
+          </label>
+          <label class="sens-inline vol-inline" title="播放音量 / Playback volume">
+            <span data-i18n="volumeShort">音量</span>
+            <input class="volume-range" type="range" min="0" max="1" step="0.01" value="0.65" aria-label="播放音量">
+            <b data-vol-readout>65</b>
+          </label>
+        </div>
+      </div>
+      <div class="dock-actions">
+        <button class="chip" id="fileBtn" type="button" title="导入本地音乐">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 13V4m0 0L6.4 7.6M10 4l3.6 3.6M4 12.5v3.2h12v-3.2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span data-i18n="actionImport">导入音乐</span>
+        </button>
+        <button class="chip" id="systemBtn" type="button" title="捕获电脑正在播放的音乐：选择整个屏幕，并勾选分享系统音频">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="2.7" y="3.3" width="14.6" height="10" rx="1" fill="none" stroke="currentColor" stroke-width="1.25"/><path d="M7.5 16.7h5M10 13.3v3.4M5.2 10.2v-2M7.5 11.7V5.8M9.8 10.7V7M12.1 12V4.8M14.4 10.6V6.6" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></svg>
+          <span data-i18n="actionSystem">电脑声音</span>
+        </button>
+        <button class="chip" id="micBtn" type="button" title="使用麦克风采集环境声音">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="7.2" y="2.8" width="5.6" height="9.2" rx="2.8" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M4.8 9.3v.7a5.2 5.2 0 0010.4 0v-.7M10 15.2v2.1M7.3 17.3h5.4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          <span data-i18n="actionMic">麦克风</span>
+        </button>
+        <button class="chip chip-primary" id="demoBtn" type="button" title="播放内置演示节拍">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 11.5v-3M6.2 14V6M8.8 16V4M11.5 13.2V6.8M14.2 15V5M16.8 11.4v-2.8" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round"/></svg>
+          <span data-i18n="actionDemo">演示节拍</span>
+        </button>
+        <button class="volume-btn" id="muteBtn" type="button" aria-label="静音">
+          <svg class="icon-vol" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7.5h2.4L10 4.6v10.8L6.4 12.5H4z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M13 7.2a4 4 0 010 5.6M15.2 5a7 7 0 010 10" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+          <svg class="icon-mute" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7.5h2.4L10 4.6v10.8L6.4 12.5H4z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M13.2 8l3.6 4M16.8 8l-3.6 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+        </button>
+        <div class="volume-pop" id="volumePop">
+          <span>音量</span>
+          <input class="volume-range" type="range" id="volume" min="0" max="1" step="0.01" value="0.65" aria-label="音量">
+          <b id="volumeText" data-vol-readout>65</b>
+        </div>
+      </div>
+    </section>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <div class="help-layer" id="helpLayer" aria-hidden="true">
+      <div class="help-card" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+        <button class="help-close" id="helpClose" type="button" aria-label="关闭">×</button>
+        <div class="eyebrow"><span class="eyebrow-line"></span>OPERATION MANUAL</div>
+        <h2 id="helpTitle">反应堆操作台</h2>
+        <div class="help-grid" id="helpGrid"></div>
+        <div class="help-foot"><span id="helpFootText">无需联网 · Three.js 本地渲染</span><button class="chip chip-primary" id="helpDemo" type="button">播放演示节拍</button></div>
+      </div>
+    </div>
+
+    <div class="source-layer" id="sourceLayer" aria-hidden="true">
+      <div class="source-card" role="dialog" aria-modal="true" aria-labelledby="sourceTitle">
+        <button class="help-close" id="sourceClose" type="button" aria-label="关闭">×</button>
+        <div class="eyebrow"><span class="eyebrow-line"></span>INPUT ROUTING / WINDOWS</div>
+        <h2 id="sourceTitle">选择音频来源</h2>
+        <p class="source-intro" id="sourceIntro">直接捕获整台电脑的声音，或只选择某一个程序。</p>
+        <div class="source-quick-grid">
+          <button class="source-option source-compact source-builtin" id="sourceBuiltinBtn" type="button">
+            <span class="source-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l10-2v12M9 18a3 3 0 11-3-3 3 3 0 013 3zM19 16a3 3 0 11-3-3 3 3 0 013 3z" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="source-copy"><b id="sourceBuiltinTitle">内置音乐</b><small id="sourceBuiltinSub">朋友的酒 DJ · M4A</small></span>
+            <em>BUILT-IN</em>
+          </button>
+          <button class="source-option source-compact" id="sourceLocalBtn" type="button">
+            <span class="source-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h5l1.7 2H20v9H4zM12 17v-5.2m0 0L9.6 14.2M12 11.8l2.4 2.4" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="source-copy"><b id="sourceLocalTitle">本地音乐</b><small id="sourceLocalSub">MP3 / WAV / M4A</small></span>
+            <em>BROWSE</em>
+          </button>
+        </div>
+        <button class="source-option source-system" id="sourceSystemBtn" type="button">
+          <span class="source-icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M8 20h8M12 16v4M6 12.3V9.4M9 13.8V7.2M12 12.4V5.8M15 14V8.6M18 12.2V9.7" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </span>
+          <span class="source-copy"><b id="sourceSystemTitle">系统声音</b><small id="sourceSystemSub">捕获整个 Windows 音频输出</small></span>
+          <em>WASAPI</em>
+        </button>
+        <div class="source-list-head">
+          <span><span id="sourceAppsLabel">程序声音</span> <em>APPLICATIONS</em></span>
+          <button class="source-refresh" id="sourceRefresh" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 6a5.2 5.2 0 10.2 4.4M13 2.5V6H9.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="sourceRefreshText">刷新</span></button>
+        </div>
+        <div class="source-list" id="sourceList"></div>
+        <div class="source-web-note" id="sourceWebNote" hidden>网页版不能直接列出单个程序；请使用系统声音（屏幕共享）或本地音乐。程序级捕获请使用桌面版。</div>
+        <div class="source-note" id="sourceNote">先让播放器开始播放，再刷新列表。只捕获声音，不读取屏幕画面。</div>
+      </div>
+    </div>
+
+    <div class="drop-layer" id="dropLayer" aria-hidden="true">
+      <div class="drop-inner">
+        <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="24" fill="none" stroke="currentColor" stroke-opacity=".3" stroke-dasharray="3 6"/><path d="M32 40V18m0 0l-8 8m8-8l8 8M18 47h28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <b data-i18n="dropTitle">松开以接入音轨</b>
+        <span data-i18n="dropSub">DROP AUDIO TO IGNITE THE CORE</span>
+      </div>
+    </div>
+
+    <div class="boot" id="boot">
+      <div class="boot-inner">
+        <div class="boot-mark">
+          <svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="34" fill="none" stroke="currentColor" stroke-opacity=".18"/><circle cx="40" cy="40" r="26" fill="none" stroke="currentColor" stroke-opacity=".42" stroke-dasharray="2 7"/><circle cx="40" cy="40" r="4" fill="currentColor"/><path d="M40 2v16M40 62v16M2 40h16M62 40h16" stroke="currentColor" stroke-opacity=".7"/></svg>
+        </div>
+        <div class="boot-word">CORE<span>//</span>07</div>
+        <div class="boot-label" data-i18n="bootLabel">校准控制棒阵列</div>
+        <div class="boot-track"><i id="bootFill"></i></div>
+        <div class="boot-meta"><span>WEBGL REACTOR INTERFACE</span><span id="bootPct">00</span></div>
+      </div>
+    </div>
+
+    <noscript><div class="noscript">需要启用 JavaScript 才能启动反应堆。</div></noscript>
+  </div>
+
+  <div class="lang-wipe" id="langWipe" aria-hidden="true"></div>
+
+  <input type="file" id="fileInput" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac" hidden>
+  <audio id="audio" preload="metadata"></audio>
+</div>
+
+<script>
+/*__THREE__*/
+</script>
+<script>
+/*__APP__*/
+</script>
+</body>
+</html>

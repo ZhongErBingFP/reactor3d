@@ -1,0 +1,20 @@
+{
+  "name": "core07-desktop",
+  "productName": "CORE07",
+  "version": "1.0.0",
+  "description": "CORE//07 audio-reactive reactor control rod matrix desktop edition",
+  "main": "main.js",
+  "author": "CORE//07",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "pack": "node pack.js"
+  },
+  "dependencies": {
+    "loopback-capture": "^3.0.2"
+  },
+  "devDependencies": {
+    "electron": "^45.1.0",
+    "@electron/packager": "^20.3.0"
+  }
+}
