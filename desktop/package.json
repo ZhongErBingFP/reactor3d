@@ -1,0 +1,65 @@
+{
+  "name": "core07-desktop",
+  "productName": "CORE07",
+  "version": "1.0.0",
+  "description": "CORE//07 audio-reactive reactor control rod matrix desktop edition",
+  "main": "main.js",
+  "author": "CORE//07",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "sync": "node sync.js",
+    "dist": "node sync.js && electron-builder --win portable --x64"
+  },
+  "dependencies": {
+    "loopback-capture": "^3.0.2"
+  },
+  "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "electron": "^45.1.0",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "com.core07.reactor",
+    "productName": "CORE07",
+    "copyright": "CORE//07",
+    "asar": true,
+    "compression": "normal",
+    "npmRebuild": false,
+    "electronDownload": {
+      "mirror": "https://npmmirror.com/mirrors/electron/"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "app/**/*",
+      "build/icon.ico",
+      "node_modules/loopback-capture/**/*",
+      "package.json"
+    ],
+    "asarUnpack": [
+      "node_modules/loopback-capture/**/*"
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "artifactName": "CORE07.exe",
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "portable": {
+      "artifactName": "CORE07.exe",
+      "requestExecutionLevel": "user"
+    }
+  }
+}
